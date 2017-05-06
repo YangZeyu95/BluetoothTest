@@ -8,8 +8,13 @@
 
 import UIKit
 import CoreBluetooth
+import CoreMotion
 
 class ViewController: UIViewController{
+    //运动管理器
+    let motionManager = CMMotionManager()
+    //刷新时间间隔
+    let timeInterval: TimeInterval = 0.02
     var interestingCharacteristic:CBCharacteristic!
     var BluetoothManager:CBCentralManager!
     var BluetoothPeripheral:CBPeripheral!
@@ -19,8 +24,41 @@ class ViewController: UIViewController{
         super.viewDidLoad()
         BluetoothManager = CBCentralManager(delegate: self, queue: nil)
         // Do any additional setup after loading the view, typically from a nib.
+        //开始陀螺仪更新
+        startAttitudeUpdates()
     }
-
+    func startAttitudeUpdates() {
+        //判断设备支持情况
+        guard motionManager.isDeviceMotionAvailable else {
+            self.DataOfPositionSener.text = "\n当前设备不支位置识别\n"
+            return
+        }
+        
+        //设置刷新时间间隔
+        self.motionManager.deviceMotionUpdateInterval = self.timeInterval
+        
+        //开始实时获取数据
+        let queue = OperationQueue.current
+        self.motionManager.startDeviceMotionUpdates(to: queue!, withHandler: { (attitudeData, error) in
+            guard error == nil else {
+                print(error!)
+                return
+            }
+            //有更新
+            if self.motionManager.isDeviceMotionActive {
+                if let attitude = attitudeData?.attitude {
+                    //var Data = "Input:"
+                    let pi = 3.1415926
+                    let PositionInput = (Int)((attitude.roll / pi * 180) / 0.02 + 5000)
+                    //Data += "\(PositionInput)"
+                    //Data += "Yaw: \(attitude.pitch)"
+                    //Data += "Pitch: \(attitude.yaw)"
+                    self.DataOfPositionSener.text = "陀螺仪数据：" + "\(PositionInput)"
+                }
+            }
+        })
+    }
+//搜索并连接蓝牙
     @IBAction func 搜索(_ sender: UIButton) {
         BluetoothManager.scanForPeripherals(withServices: nil, options: nil)
         Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false, block: { [weak self] _ in
@@ -42,6 +80,7 @@ class ViewController: UIViewController{
         // Dispose of any resources that can be recreated.
     }
 
+    @IBOutlet weak var DataOfPositionSener: UILabel!
 
 }
 extension ViewController : CBCentralManagerDelegate{

@@ -58,10 +58,18 @@
                                     <action selector="Signal:" destination="BYZ-38-t0r" eventType="touchUpInside" id="S2L-O7-Z3x"/>
                                 </connections>
                             </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="陀螺仪数据：" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cET-YG-1UK">
+                                <rect key="frame" x="16" y="236" width="343" height="51"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     </view>
                     <connections>
+                        <outlet property="DataOfPositionSener" destination="cET-YG-1UK" id="jb5-Bh-uBf"/>
                         <outlet property="Input" destination="m14-q0-2w1" id="dQe-HJ-QsV"/>
                         <outlet property="Position" destination="aza-lH-LSy" id="5ox-MD-1dg"/>
                         <outlet property="log" destination="ZEv-ZJ-iXs" id="may-fb-SpM"/>
@@ -69,7 +77,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="559" y="130"/>
+            <point key="canvasLocation" x="557.60000000000002" y="129.98500749625188"/>
         </scene>
     </scenes>
 </document>
