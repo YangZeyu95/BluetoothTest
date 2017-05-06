@@ -10,11 +10,11 @@ import UIKit
 import CoreBluetooth
 
 class ViewController: UIViewController{
-
+    var interestingCharacteristic:CBCharacteristic!
     var BluetoothManager:CBCentralManager!
     var BluetoothPeripheral:CBPeripheral!
     let SignalOfSpeed = 2
-    let data:NSData = "1".data(using: String.Encoding.utf8, allowLossyConversion: true) as! NSData
+    let data:NSData = "1".data(using: String.Encoding.utf8, allowLossyConversion: true)! as NSData
     override func viewDidLoad() {
         super.viewDidLoad()
         BluetoothManager = CBCentralManager(delegate: self, queue: nil)
@@ -29,7 +29,7 @@ class ViewController: UIViewController{
     }
     
     @IBAction func Signal(_ sender: UIButton) {
-        self.BluetoothPeripheral.writeValue(data as Data, for: <#T##CBCharacteristic#>, type: <#T##CBCharacteristicWriteType#>)
+        self.BluetoothPeripheral.writeValue(data as Data, for: interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
     }
     @IBOutlet weak var log: UILabel!
     
@@ -93,6 +93,7 @@ extension ViewController : CBPeripheralDelegate {
         for c in service.characteristics! {
             
             if c.uuid.uuidString == "FFE1"{
+                interestingCharacteristic = c
                 print(c.uuid.uuidString)
                 peripheral.setNotifyValue(true, for: c)
             }
