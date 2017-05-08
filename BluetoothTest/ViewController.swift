@@ -18,8 +18,12 @@ class ViewController: UIViewController{
     var interestingCharacteristic:CBCharacteristic!
     var BluetoothManager:CBCentralManager!
     var BluetoothPeripheral:CBPeripheral!
+    var SuccessToConnectBluetooth = false
     let SignalOfSpeed = 2
     let data:NSData = "1".data(using: String.Encoding.utf8, allowLossyConversion: true)! as NSData
+    let SendPosition:NSData = "P".data(using: String.Encoding.utf8, allowLossyConversion: true)! as NSData
+    let SendInput:NSData = "I".data(using: String.Encoding.utf8, allowLossyConversion: true)! as NSData
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         BluetoothManager = CBCentralManager(delegate: self, queue: nil)
@@ -27,6 +31,7 @@ class ViewController: UIViewController{
         //开始陀螺仪更新
         startAttitudeUpdates()
     }
+    
     func startAttitudeUpdates() {
         //判断设备支持情况
         guard motionManager.isDeviceMotionAvailable else {
@@ -50,11 +55,12 @@ class ViewController: UIViewController{
                     //var Data = "Input:"
                     let pi = 3.1415926
                     let PositionInput = (Int)((attitude.roll / pi * 180) / 0.02 + 5000)
-                    //Data += "\(PositionInput)"
-                    //Data += "Yaw: \(attitude.pitch)"
-                    //Data += "Pitch: \(attitude.yaw)"
                     self.DataOfPositionSener.text = "陀螺仪数据：" + "\(PositionInput)"
+                    if self.SuccessToConnectBluetooth == true {
+                        self.BluetoothPeripheral.writeValue(PositionInput.description.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
                 }
+                }
+                
             }
         })
     }
@@ -133,6 +139,7 @@ extension ViewController : CBPeripheralDelegate {
             
             if c.uuid.uuidString == "FFE1"{
                 interestingCharacteristic = c
+                SuccessToConnectBluetooth = true
                 print(c.uuid.uuidString)
                 peripheral.setNotifyValue(true, for: c)
             }
