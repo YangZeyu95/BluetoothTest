@@ -14,18 +14,18 @@ class ViewController: UIViewController{
     //运动管理器
     let motionManager = CMMotionManager()
     //刷新时间间隔
-    let timeInterval: TimeInterval = 0.02
+    let timeInterval: TimeInterval = 0.1
     var interestingCharacteristic:CBCharacteristic!
     var BluetoothManager:CBCentralManager!
     var BluetoothPeripheral:CBPeripheral!
     var SuccessToConnectBluetooth = false
     let SignalOfSpeed = 2
     let data:NSData = "1".data(using: String.Encoding.utf8, allowLossyConversion: true)! as NSData
-    let SendPosition:NSData = "P".data(using: String.Encoding.utf8, allowLossyConversion: true)! as NSData
-    let SendInput:NSData = "I".data(using: String.Encoding.utf8, allowLossyConversion: true)! as NSData
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        UIApplication.shared.isIdleTimerDisabled = true
         BluetoothManager = CBCentralManager(delegate: self, queue: nil)
         // Do any additional setup after loading the view, typically from a nib.
         //开始陀螺仪更新
@@ -52,13 +52,14 @@ class ViewController: UIViewController{
             //有更新
             if self.motionManager.isDeviceMotionActive {
                 if let attitude = attitudeData?.attitude {
-                    //var Data = "Input:"
                     let pi = 3.1415926
                     let PositionInput = (Int)((attitude.roll / pi * 180) / 0.02 + 5000)
+
                     self.DataOfPositionSener.text = "陀螺仪数据：" + "\(PositionInput)"
+                    let DataToSend = "\r\n\(PositionInput)"
                     if self.SuccessToConnectBluetooth == true {
-                        self.BluetoothPeripheral.writeValue(PositionInput.description.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
-                }
+                        self.BluetoothPeripheral.writeValue(DataToSend.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+                    }
                 }
                 
             }
@@ -67,20 +68,29 @@ class ViewController: UIViewController{
 //搜索并连接蓝牙
     @IBAction func 搜索(_ sender: UIButton) {
         BluetoothManager.scanForPeripherals(withServices: nil, options: nil)
-        Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false, block: { [weak self] _ in
-            self?.BluetoothManager.stopScan()
-                   })
+        Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false, block: { [weak self] _ in self?.BluetoothManager.stopScan()})
     }
     
-    @IBAction func Signal(_ sender: UIButton) {
-        self.BluetoothPeripheral.writeValue(data as Data, for: interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+    @IBAction func WrithValue(_ sender: UIButton) {
+        let Kp1 = "P" + Kp.text!
+        let Ki1 = "I" + Ki.text!
+        let Kd1 = "D" + Kd.text!
+        let Threshold1 = "T" + Threshold.text!
+        self.BluetoothPeripheral.writeValue(Kp1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+        self.BluetoothPeripheral.writeValue(Ki1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+        self.BluetoothPeripheral.writeValue(Kd1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+        self.BluetoothPeripheral.writeValue(Threshold1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+        
     }
+    
+    @IBOutlet weak var Threshold: UITextField!
+    @IBOutlet weak var Kd: UITextField!
+    @IBOutlet weak var Ki: UITextField!
+    @IBOutlet weak var Kp: UITextField!
     @IBOutlet weak var log: UILabel!
-    
     @IBOutlet weak var Position: UILabel!
-    
-
     @IBOutlet weak var Input: UILabel!
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -150,28 +160,28 @@ extension ViewController : CBPeripheralDelegate {
         let data:Data = characteristic.value!
         let  d  = Array(UnsafeBufferPointer(start: (data as NSData).bytes.bindMemory(to: UInt8.self, capacity: data.count), count: data.count))
         print(d)
-        if d[0] >= 128 {
-            for i in (0...17).filter({i in i % 2 == 0}) {
-                let PosL = (Int)(d[i])
-                let PosH = (Int)(d[i+1])
-                let InputL = (Int)(d[i+2])
-                let InputH = (Int)(d[i+3])
-                Position.text = "\(PosL - 128 + PosH * 100)"
-                Input.text = "\(InputL - 128 + InputH * 100)"
+        if d.count == 20
+        {
+            if d[0] >= 128 {
+                for i in (0...17).filter({i in i % 2 == 0}) {
+                    let PosL = (Int)(d[i])
+                    let PosH = (Int)(d[i+1])
+                    let InputL = (Int)(d[i+2])
+                    let InputH = (Int)(d[i+3])
+                    self.Position.text = "\(PosL - 128 + PosH * 100)"
+                    self.Input.text = "\(InputL - 128 + InputH * 100)"
+                }
             }
-        }
-        else {
-            for i in (1...15).filter({i in i % 2 == 1}) {
-                
-                let PosL = (Int)(d[i])
-                let PosH = (Int)(d[i+1])
-                let InputL = (Int)(d[i+2])
-                let InputH = (Int)(d[i+3])
-                Position.text = "\(PosL - 128 + PosH * 100)"
-                Input.text = "\(InputL - 128 + InputH * 100)"
-
+            else {
+                for i in (1...15).filter({i in i % 2 == 1}) {
+                    let PosL = (Int)(d[i])
+                    let PosH = (Int)(d[i+1])
+                    let InputL = (Int)(d[i+2])
+                    let InputH = (Int)(d[i+3])
+                    self.Position.text = "\(PosL - 128 + PosH * 100)"
+                    self.Input.text = "\(InputL - 128 + InputH * 100)"
+                }
             }
-
         }
     }
 }
