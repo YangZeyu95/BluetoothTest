@@ -14,14 +14,18 @@ class ViewController: UIViewController{
     //运动管理器
     let motionManager = CMMotionManager()
     //刷新时间间隔
-    let timeInterval: TimeInterval = 0.1
+    let timeInterval: TimeInterval = 0.02
     var interestingCharacteristic:CBCharacteristic!
     var BluetoothManager:CBCentralManager!
     var BluetoothPeripheral:CBPeripheral!
     var SuccessToConnectBluetooth = false
     let SignalOfSpeed = 2
     let data:NSData = "1".data(using: String.Encoding.utf8, allowLossyConversion: true)! as NSData
-    
+    var Kp1:String!
+    var Ki1:String!
+    var Kd1:String!
+    var Threshold1:String!
+    var DataToSend:String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -56,10 +60,8 @@ class ViewController: UIViewController{
                     let PositionInput = (Int)((attitude.roll / pi * 180) / 0.02 + 5000)
 
                     self.DataOfPositionSener.text = "陀螺仪数据：" + "\(PositionInput)"
-                    let DataToSend = "\r\n\(PositionInput)"
-                    if self.SuccessToConnectBluetooth == true {
-                        self.BluetoothPeripheral.writeValue(DataToSend.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
-                    }
+                    self.DataToSend = "\r\n\(PositionInput)"
+                    
                 }
                 
             }
@@ -71,17 +73,95 @@ class ViewController: UIViewController{
         Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false, block: { [weak self] _ in self?.BluetoothManager.stopScan()})
     }
     
-    @IBAction func WrithValue(_ sender: UIButton) {
-        let Kp1 = "P" + Kp.text!
-        let Ki1 = "I" + Ki.text!
-        let Kd1 = "D" + Kd.text!
-        let Threshold1 = "T" + Threshold.text!
-        self.BluetoothPeripheral.writeValue(Kp1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
-        self.BluetoothPeripheral.writeValue(Ki1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
-        self.BluetoothPeripheral.writeValue(Kd1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
-        self.BluetoothPeripheral.writeValue(Threshold1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+    @IBAction func WriteKp(_ sender: UIButton) {
         
+        switch Kp.text!.lengthOfBytes(using: String.Encoding.utf8) {
+        case 4:
+            Kp1 = "\rP" + Kp.text!
+            break
+        case 3:
+            Kp1 = "\rP" + "0" + Kp.text!
+            break
+        case 2:
+            Kp1 = "\rP" + "00" + Kp.text!
+            break
+        case 1:
+            Kp1 = "\rP" + "000" + Kp.text!
+            break
+        default:
+            break
+        }
+        if Kp.text!.lengthOfBytes(using: String.Encoding.utf8) != 0 {
+            BluetoothPeripheral.writeValue(Kp1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+        }
     }
+    @IBAction func WriteKi(_ sender: UIButton) {
+        switch Ki.text!.lengthOfBytes(using: String.Encoding.utf8) {
+        case 4:
+            Ki1 = "\rI" + Ki.text!
+            break
+        case 3:
+            Ki1 = "\rI" + "0" + Ki.text!
+            break
+        case 2:
+            Ki1 = "\rI" + "00" + Ki.text!
+            break
+        case 1:
+            Ki1 = "\rI" + "000" + Ki.text!
+            break
+        default:
+            break
+        }
+        if Ki.text!.lengthOfBytes(using: String.Encoding.utf8) != 0 {
+            BluetoothPeripheral.writeValue(Ki1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+        }
+    }
+    @IBAction func WriteKd(_ sender: UIButton) {
+        switch Kd.text!.lengthOfBytes(using: String.Encoding.utf8) {
+        case 4:
+            Kd1 = "\rD" + Kd.text!
+            break
+        case 3:
+            Kd1 = "\rD" + "0" + Kd.text!
+            break
+        case 2:
+            Kd1 = "\rD" + "00" + Kd.text!
+            break
+        case 1:
+            Kd1 = "\rD" + "000" + Kd.text!
+            break
+        default:
+            break
+        }
+        if Kd.text!.lengthOfBytes(using: String.Encoding.utf8) != 0 {
+            BluetoothPeripheral.writeValue(Kd1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+        }
+    }
+    @IBAction func WriteThreshold(_ sender: UIButton) {
+        switch Ki.text!.lengthOfBytes(using: String.Encoding.utf8) {
+        case 4:
+            Threshold1 = "\rT" + Threshold.text!
+            break
+        case 3:
+            Threshold1 = "\rT" + "0" + Threshold.text!
+            break
+        case 2:
+            Threshold1 = "\rT" + "00" + Threshold.text!
+            break
+        case 1:
+            Threshold1 = "\rT" + "000" + Threshold.text!
+            break
+        default:
+            break
+        }
+
+        if Threshold.text!.lengthOfBytes(using: String.Encoding.utf8) != 0 {
+            BluetoothPeripheral.writeValue(Threshold1.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+        }
+    }
+    @IBAction func WriteValue(_ sender: UIButton) {
+    }
+    
     
     @IBOutlet weak var Threshold: UITextField!
     @IBOutlet weak var Kd: UITextField!
@@ -158,8 +238,15 @@ extension ViewController : CBPeripheralDelegate {
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?){
         let data:Data = characteristic.value!
-        let  d  = Array(UnsafeBufferPointer(start: (data as NSData).bytes.bindMemory(to: UInt8.self, capacity: data.count), count: data.count))
+        let  d  = Array(UnsafeBufferPointer(start: (data as NSData).bytes.bindMemory(to: UInt8.self,  capacity: data.count), count: data.count))
         print(d)
+        for c in d {
+            if c == 0x50 {
+                if self.SuccessToConnectBluetooth == true {
+                    self.BluetoothPeripheral.writeValue(DataToSend.data(using: String.Encoding.utf8, allowLossyConversion: true)!, for: self.interestingCharacteristic, type: CBCharacteristicWriteType(rawValue: 1)!)
+                }
+            }
+        }
         if d.count == 20
         {
             if d[0] >= 128 {
